@@ -1,6 +1,8 @@
 #include <boost/heap/fibonacci_heap.hpp>
-
+#include <sstream>
 #include <iostream>
+
+using namespace std;
 
 struct node
 {
@@ -27,6 +29,12 @@ int main()
     node a(2);
     handle=heap.push(a);
     heap.push(node(1));
+
+	stringstream ss;
+	ss.str("Example String\n");
+	string s;
+	s=ss.str();
+	cout << s;
 
     for(const node& n : heap) {
         std::cout << n.id << "\n";
