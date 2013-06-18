@@ -1,69 +1,55 @@
 #include<stdio.h>
+#include "resources.h"
 #include<string.h>
 #include<stdlib.h>
 #include<boost/heap/fibonacci_heap.hpp>
-#define INFINITY 100000
+#define INFINITY 1000000
 
 using namespace boost::heap;
 
-int *dist;
+extern float *dist;
 
-struct node
-{
-	int id;
-	int weight;
-	struct node* next;
-	
-	node()
-	{
-		id=0;
-		weight=0;
-		next=NULL;
-	}
-	node(const int& x)
-	{
-		id=x;
-		weight=0;
-		next=NULL;
-	}
-};
-
-
-struct node_less 
-{
-	bool operator () (const node & x, const node & y) const
-	{
-		return dist[x.id] > dist[y.id];			//for making it a min-heap. For max-heap use "<" operator.
-	}
-
-};
 
 typedef fibonacci_heap <node, compare<node_less> > FibonacciHeap;
 typedef fibonacci_heap <node, compare<node_less> > :: handle_type HeapHandle;
+
+
 void print_graph(struct node *list,const int & n)
 {
 	int i;
 	struct node *temp;
 	for(i=0;i<n;i++)
 	{
-		temp=&list[i];
+		temp=list[i].next;
 		while(temp!=NULL)
 		{
-			printf("%d----%d----%d\n",i,temp->weight,temp->id);
+			printf("%d----%f----%d\n",i,temp->weight,temp->id);
 			temp=temp->next;
 		}
 	}
 }
 
-void create_edge(struct node *list,const int& node1,const int & node2,const int & weight)
+void create_edge(struct node *list,const int& node1,const int & node2,const float & weight)
 {
 	struct node *current= &list[node1];
 	struct node *temp=current;
 
 	while(temp->next!=NULL)
-		if(temp->next->weight <= weight)
+		if(temp->id == node2)
+		{
+			if(temp->weight > weight)
+				temp->weight = weight;
+			return;
+		}
+		else
 			temp=temp->next;
-		else break;
+		if(temp->id == node2)
+		{
+			if(temp->weight > weight)
+				temp->weight = weight;
+			return;
+		}
+	
 	current=(struct node *)malloc(sizeof(struct node));
 	current->next=temp->next;
 	temp->next=current;
@@ -73,12 +59,35 @@ void create_edge(struct node *list,const int& node1,const int & node2,const int 
 
 }
 
-
-
-
-void dijkstra(struct node *list,int n, int source, int target, int *prev, int *dist)
+void create_edge(struct node *list,const int& node1,const int & node2,const float & weight, const float & secondary_weight)
 {
-	int i,new_dist;
+        struct node *current= &list[node1];
+        struct node *temp=current;
+
+        while(temp->next!=NULL)
+                if(temp->id == node2)
+                {
+                        if(temp->weight > weight)
+                                temp->weight = weight;
+                        return;
+                }
+                else if(temp->next->weight <= weight)
+                        temp=temp->next;
+                else break;
+        current=(struct node *)malloc(sizeof(struct node));
+        current->next=temp->next;
+        temp->next=current;
+
+        current->id = node2;
+        current->weight=weight;
+
+}
+
+
+void dijkstra(struct node *list,int n, int source, int target, int *prev, float *dist)
+{
+	int i;
+	float new_dist;
 	struct node current,*neighbour,temp;
 	HeapHandle *handle;
 
@@ -111,14 +120,28 @@ void dijkstra(struct node *list,int n, int source, int target, int *prev, int *d
 				neighbour = neighbour->next;
 		}
 	}
+        for (i=0;i<n;i++)
+                printf("%d\t%f\n",list[i].id,dist[list[i].id]);
+        int j;
+
+        for (j=0,i=target;i!=source;i=prev[i],j++)
+                if(j>=n)
+                {
+                        printf("Not connected\n");
+                        break;
+                }
+                else
+                        printf("%d<--",i);
+        printf("%d\n",source);
 
 }
-
+/*
 int main()
 {
 	char c;
 	printf("Input the number of nodes in the graph ");
-	int n,node1,node2,weight,i;
+	int n,node1,node2,i;
+	float weight;
 	scanf("%d",&n);
 
 	struct node *list;
@@ -138,7 +161,7 @@ int main()
 		ungetc((int) c,stdin);
 		scanf("%d",&node1);
 		scanf("%d",&node2);
-		scanf("%d",&weight);
+		scanf("%f",&weight);
 		if (weight >= INFINITY)
 		{
 			printf("Edge weights too large\n");
@@ -157,13 +180,24 @@ int main()
 	scanf("%d",&node2);
 
 	int *prev;
-	dist = (int *)malloc(sizeof(int)*n);
+	dist = (float *)malloc(sizeof(float)*n);
 	prev = (int *)malloc(sizeof(int)*n);	
 
 	dijkstra(list,n,node1,node2,prev,dist);
 
 	for (i=0;i<n;i++)
-		printf("%d\t%d\n",list[i].id,dist[list[i].id]);
+		printf("%d\t%f\n",list[i].id,dist[list[i].id]);
+	int j;
+
+	for (j=0,i=node2;i!=node1;i=prev[i],j++)
+		if(j>=n)
+		{
+			printf("Not connected\n");
+			break;
+		}
+		else
+			printf("%d<--",i);
+	printf("%d\n",node1);
 
 	return 0;
-}
+}*/

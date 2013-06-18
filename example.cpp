@@ -1,3 +1,4 @@
+#include<stdio.h>
 #include <boost/heap/fibonacci_heap.hpp>
 #include <sstream>
 #include <iostream>
@@ -23,8 +24,8 @@ struct compare_node
 
 int main()
 {
-    boost::heap::fibonacci_heap<node, boost::heap::compare<compare_node>> heap;
-    boost::heap::fibonacci_heap < node, boost::heap::compare<compare_node>> ::handle_type handle;
+    boost::heap::fibonacci_heap < node, boost::heap::compare <compare_node> > heap;
+    boost::heap::fibonacci_heap < node, boost::heap::compare <compare_node> > ::handle_type handle;
     heap.push(node(3));
     node a(2);
     handle=heap.push(a);
@@ -36,10 +37,10 @@ int main()
 	s=ss.str();
 	cout << s;
 
-    for(const node& n : heap) {
+/*    for(const node& n : heap) {
         std::cout << n.id << "\n";
     }
-
+*/
 	heap.update(handle,5);
 
     struct node temp(0);
@@ -51,6 +52,18 @@ int main()
 	}
 
 
+	float  *array;
+	array = ( float *)malloc(sizeof(float )*10);
+	int i;
+	array[0]=1;
+	for (i=1;i<10;i++)
+		array[i]=array[i-1]*100;
 
-	std::cout <<"\n" << INFINITY;
+	for (i=0;i<10;i++)
+		std::cout << array[i] << " ";
+	std::cout << "\n";
+	for (i=0;i<10;i++)
+		printf("%f ",array[i]);
+	printf("\n");
+	std::cout << "\n";
 }
