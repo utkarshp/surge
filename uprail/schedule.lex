@@ -27,9 +27,11 @@ number [0-9]
 <EXTRACT>"<tr><td>"		{arrival = 1; BEGIN CODE;}
 <CODE>{text}+			{train_id = codetoid(yytext); if (train_id == -1) BEGIN EXTRACT; else { train << train_id << ' '; BEGIN HOUR;} }
 <HOUR>Source			{issource = 1; arrival = 0;}
+<HOUR>Destination		{issource = 0; arrival = 0; BEGIN MIN;}
 <HOUR>{number}+			{hour = atoi(yytext); BEGIN MIN;}
 <MIN>{number}+			{minutes = atoi(yytext);}
-<MIN>"pm"			{hour = hour + 12;}
+<MIN>"pm"			{if (hour != 12) hour = hour + 12;}
+<MIN>"am"			{if (hour == 12) hour = 0;}
 <MIN>"</td>"			{train << hour << ':' << minutes << ' '; if(issource == 1) {train << hour << ':' << minutes << ' '; issource = 0;} if (arrival == 0) BEGIN DISTANCE; else {arrival = 0; BEGIN HOUR;} }
 
 <DISTANCE>{number}+		{currdist = atoi(yytext); train << currdist-prevdist << '\n'; prevdist = currdist; BEGIN EXTRACT;}

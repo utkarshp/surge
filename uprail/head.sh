@@ -5,5 +5,5 @@ do
 	echo $url
 	filename="./trains/temp.html"
 	curl -U indram:gambler21@indra -x ironport2.iitk.ac.in:3128 --location $url --insecure -o $filename
-	./a.out ./trains/$id < $filename
+	./schedule ./trains/$id < $filename
 done

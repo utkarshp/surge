@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string>
+#include <cstring>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -7,6 +9,7 @@
 #define NAMELENGTH 20
 #define NUMBERLENGTH 8
 #define TEMP all_stations[current]
+#define PATH "./uprail/trains/"
 
 extern int total_stations;
 
@@ -15,7 +18,7 @@ using namespace std;
 station *main_railway()
 {
 	FILE *fp,*railway;
-	fp = fopen("railway_id","r");
+	fp = fopen((string(PATH) + string("railway_id")).c_str(),"r");
 	int total_trains=0;	
 	int j;
 	char c;
@@ -29,7 +32,7 @@ station *main_railway()
 	total_trains -= 2;
 	fclose(fp);
 
-printf("Total trains = %d\n",total_trains);
+	printf("Total trains = %d\n",total_trains);
 
 	char train_num[total_trains][NUMBERLENGTH];
 	int i;
@@ -38,7 +41,7 @@ printf("Total trains = %d\n",total_trains);
 	int current,next,previous;
 	tm arrive, depart, next_arrive;
 
-	
+
 	memset(&arrive,0,sizeof(tm));
 	memset(&depart,0,sizeof(tm));
 	memset(&next_arrive,0,sizeof(tm));
@@ -53,16 +56,17 @@ printf("Total trains = %d\n",total_trains);
 	for (i=0;i<total_stations;i++)
 		all_stations[i] = station(total_trains,i);
 
-	fp = fopen("railway_id","r");
+	fp = fopen((string(PATH)+string("railway_id")).c_str(),"r");
 	i=0;
 	int space;
 	float cost;
-	while(1)
+	while(!feof(fp))
 	{
 		space = 0;
 		j=0;
-		fscanf(fp," %c",&c);
-		if(c=='N') break;
+		fscanf(fp,"%s",train_num[i]);
+		fscanf(fp,"%s",train_name[i]);
+	/*	if(c=='N') break;
 		while(c!='\n' && j < NAMELENGTH)
 		{
 			if(space == 0) train_num[i][j]=c;
@@ -76,20 +80,23 @@ printf("Total trains = %d\n",total_trains);
 				j=0;
 			}
 		}
-		train_name[i][j] = '\0';
+		train_name[i][j] = '\0';*/
+
 		
-		railway = fopen(train_num[i],"r");
-	stations=0;
-	while(!feof(railway))
-	{
-		fscanf(railway,"%c",&c);
-		if(c=='\n') stations++;
-	}
-	stations -= 2;
-	fclose(railway);
-		railway = fopen(train_num[i],"r");
-//	printf("Stations for train %d = %d\n",i,stations);
-	fscanf(railway,"%d %d:%d",&current,&arrive.tm_hour,&arrive.tm_min);
+
+		railway = fopen((string(PATH) + string(train_num[i])).c_str(),"r");
+		if (railway == NULL) break;
+		stations=0;
+		while(!feof(railway))
+		{
+			fscanf(railway,"%c",&c);
+			if(c=='\n') stations++;
+		}
+		stations -= 2;
+		fclose(railway);
+		railway = fopen((string(PATH) + string(train_num[i])).c_str(),"r");
+		//	printf("Stations for train %d = %d\n",i,stations);
+		fscanf(railway,"%d %d:%d",&current,&arrive.tm_hour,&arrive.tm_min);
 		for (j=0;j<stations;j++)
 		{
 			fscanf(railway,"%d:%d %f\n%d %d:%d",&depart.tm_hour,&depart.tm_min,&cost,&next,&next_arrive.tm_hour,&next_arrive.tm_min);
@@ -101,8 +108,8 @@ printf("Total trains = %d\n",total_trains);
 			arrive = next_arrive;
 		}
 		fscanf(railway,"%d:%d %f",&depart.tm_hour,&depart.tm_min,&cost);
-                all_stations[current].add_train(atoi(train_num[i]),next);
-                TEMP.assign_time(arrive,depart,next_arrive);
+		all_stations[current].add_train(atoi(train_num[i]),next);
+		TEMP.assign_time(arrive,depart,next_arrive);
 		if (j>0) all_stations[previous].assign_cost(cost);
 
 		fclose(railway);
@@ -111,11 +118,11 @@ printf("Total trains = %d\n",total_trains);
 	fclose(fp);
 
 	printf("Station\tTrain No.\tArrival\t\tDeparture, Next Station \tArrival\tCost\n");
-        for (i=0;i<total_stations;i++)
-        {
-                printf("---------------------------------------------%d---------------------------------------------\n",i);
-                all_stations[i].print();
-        }
+	for (i=0;i<total_stations;i++)
+	{
+		printf("---------------------------------------------%d---------------------------------------------\n",i);
+		all_stations[i].print();
+	}
 
 	return all_stations;
 }
@@ -124,11 +131,11 @@ printf("Total trains = %d\n",total_trains);
 int main()
 {
 	struct station *all_stations=main_railway();
-*	int i;
-	for (i=0;i<total_stations;i++)
-	{
+	*	int i;
+		for (i=0;i<total_stations;i++)
+		{
 		printf("---------------------------------%d---------------------------------\n",i);
 		all_stations[i].print();
-	}
-*	return 0;
+		}
+	return 0;
 }*/
