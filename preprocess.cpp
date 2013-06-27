@@ -14,7 +14,8 @@ int **adjmatrix;			//Adjacency matrix representation of the graph
 extern void print_graph(struct node *, const int &);
 extern station *main_railway();
 extern void create_edge(node *, const int &, const int &, const float &);
-extern void dijkstra(struct node *list,int n, int source, int target, int *prev, float *dist);
+extern void create_edge(node *, const int &, const int &, const float &, const int &);
+extern void dijkstra(struct node *list,int n, int source, int target, int *prev, int *dist);
 
 using namespace std;
 
@@ -53,6 +54,7 @@ int **makematrix(node graph[], int n)		// function to make an adjacency matrix l
 	for (i=0;i<n;i++)
 	{
 		temp = graph[i].next;
+		reach[i][i] = adjmatrix[i][i] = 1;
 		while (temp!=NULL)
 		{
 			j = temp->id;
@@ -65,12 +67,13 @@ int **makematrix(node graph[], int n)		// function to make an adjacency matrix l
 	int k;
 	for (k=0;k<n;k++)						//Floyd-Warshall algorithm for reachability
 		for(i=0;i<n;i++)
-			for(j=0;j<n;j++)
-				reach[i][j] = reach[i][j] || reach[i][k] && reach[k][j];
+			if (reach[i][k] == 1)
+				for(j=0;j<n;j++)
+					reach[i][j] = reach[i][j] || reach[i][k] && reach[k][j];
 
 	for (i=0;i<n;i++)
-		reach[i][i] = -1;					//No self edge. but to distinguish from unreachability.
-
+		reach[i][i] = 1;	
+	return reach;
 }
 
 double time_diff(tm current, tm begin, tm end)
@@ -106,7 +109,7 @@ main()
 	struct node *all_nodes;
 	all_nodes = (node *)malloc(sizeof(node)*total_stations);
 
-	int i,j;
+	int i,j, **reach;
 	float weight;
 	for (i=0;i<total_stations;i++)
 		all_nodes[i] = node(i);
@@ -120,57 +123,80 @@ main()
 
 	print_graph(all_nodes,total_stations);
 
-//	for (i=0;i<total_stations;i++)
-//		printf("%d --- %d %d\n",i,visited[i],reachable[i]);
-	printf("Please Enter source station ");
-	scanf("%d",&source);
-	printf("Please Enter Destination station id ");
-	scanf("%d",&dest);
-
-	dfs(all_nodes,source,dest,visited);
-
-//	for (i=0;i<total_stations;i++)
-//		printf("%d --- %d %d\n",i,visited[i],reachable[i]);
-
-//	print_graph(all_nodes,total_stations);
-	int k=0,neighbour;
-	int total_reachable=0;
-	for (i=0;i<total_stations;i++)
-		if(reachable[i]) k=printf("%d ",i), total_reachable++;
-	if(k==0)
+	//	for (i=0;i<total_stations;i++)
+	//		printf("%d --- %d %d\n",i,visited[i],reachable[i]);
+	while (1)
 	{
-		 printf("No possible route.\n");
-		 return 0;
-	}
+		printf("Please Enter source station ");
+		scanf("%d",&source);
+		printf("Please Enter Destination station id ");
+		scanf("%d",&dest);
 
-	printf("\n%d\n",total_reachable);
-	node *all_reachable = (node *)malloc(sizeof(node)*total_stations);
-       for (i=0;i<total_stations;i++)
-                all_reachable[i] = node(i);
-	int choice;
-	printf("For minimising cost, enter 1.\n");
-	scanf("%d",&choice);
-	if(choice == 1)
-	{
+		reach = makematrix(all_nodes,total_stations);
+
 		for (i=0;i<total_stations;i++)
-			if (!reachable[i]) continue;
-			else
-				for (j=0;j<all_stations[i].total_trains;j++)
+			if (reach[source][i] == 1 && reach[i][dest] == 1) reachable[i] = 1;
+			else reachable[i]=0;
+
+
+	//	dfs(all_nodes,source,dest,visited);
+
+		//	for (i=0;i<total_stations;i++)
+		//		printf("%d --- %d %d\n",i,visited[i],reachable[i]);
+
+		//	print_graph(all_nodes,total_stations);
+		int k=0,neighbour;
+		int total_reachable=0;
+		for (i=0;i<total_stations;i++)
+			if(reachable[i]) k=printf("%d ",i), total_reachable++;
+		if(k==0)
+		{
+			printf("No possible route.\n");
+			continue;
+		}
+
+		printf("\n%d\n",total_reachable);
+		node *all_reachable = (node *)malloc(sizeof(node)*total_stations);
+		for (i=0;i<total_stations;i++)
+			all_reachable[i] = node(i);
+		int choice;
+		printf("For minimising cost, enter 1.\n");
+		scanf("%d",&choice);
+		if(choice == 1)
+		{
+			for (i=0;i<total_stations;i++)
+				if (!reachable[i]) continue;
+				else
+					for (j=0;j<all_stations[i].total_trains;j++)
+					{
+						if (!reachable[j]) continue;
+						neighbour = all_stations[i].next[j];
+						create_edge(all_reachable,i,neighbour,all_stations[i].cost[j],all_stations[i].trains[j]);
+					}
+			
+			int *prev = (int *)malloc(sizeof(int)*total_stations);
+			int *trains = (int *)malloc(sizeof(int)*total_stations);
+			dist = (float *)malloc(sizeof(float)*total_stations);
+
+			print_graph(all_reachable,total_stations);
+
+			dijkstra(all_reachable,total_stations,source,dest,prev,trains);
+
+			for (j=0,i=dest;i!=source;i=prev[i],j++)
+				if(i == prev[i])
 				{
-					neighbour = all_stations[i].next[j];
-					create_edge(all_reachable,i,neighbour,all_stations[i].cost[j]);
+					printf("Not connected\n");
+					break;
 				}
-		int *prev = (int *)malloc(sizeof(int)*total_stations);
-		dist = (float *)malloc(sizeof(float)*total_stations);
-
-		print_graph(all_reachable,total_stations);
-
-		dijkstra(all_reachable,total_stations,source,dest,prev,dist);
-		return 1;
+				else
+					printf("%d<--%d--<",i,trains[i]);
+			printf("%d\n",source);
+				continue;
+		}
+		else continue;
+		printf("Please Enter Time of departure (hh:mm) ");
+		scanf("%d:%d",&departure.tm_hour,&departure.tm_min);
+		printf("You have entered: %d To %d  at ",source,dest);
+		printf("%d:%d O'clock\n",departure.tm_hour,departure.tm_min);
 	}
-	else return 0;
-	printf("Please Enter Time of departure (hh:mm) ");
-	scanf("%d:%d",&departure.tm_hour,&departure.tm_min);
-	printf("You have entered: %d To %d  at ",source,dest);
-	printf("%d:%d O'clock\n",departure.tm_hour,departure.tm_min);
 }

@@ -31,6 +31,7 @@
 12233	Lucknow_New_Delhi_AC_Express
 12237	Varanasi_Jammu_Tawi_Begampura_Express
 12279	Jhansi_Nizamuddin_Taj_Express
+12294	Allahabad_Lokmanya_Tilak_T_AC_Duronto_Express
 12320	Agra_Cantt_Kolkata_Express_via_Mathura_Kasganj
 12334	Allahabad_City_Howrah_Vibhuti_Express
 12403	Allahabad_Mathura_Express
@@ -38,6 +39,7 @@
 12417	Allahabad_New_Delhi_Prayagraj_Express
 12419	Lucknow_New_Delhi_Gomti_Express
 12447	ManikpurNizamuddin_Uttar_Pradesh_Sampark_Kranti_E
+12451	Kanpur_New_Delhi_Shram_Shakthi_Express
 12469	Kanpur_Jammu_Tawi_Express
 12511	Gorakhpur_Thiruvananthapuram_Express
 12531	Gorakhpur_Lucknow_Intercity_Express
@@ -144,6 +146,7 @@
 15309	Kasganj_Aishbagh_Rohail_Khand_Express
 15310	Aishbagh_Kasganj_Rohail_Khand_Express
 15311	Kasganj_Junction_to_Bareilly_City_Express_
+15312	Bareilly_City_to_Kasganj_Junction_Express
 15313	Aishbagh_Bareilly_Express
 15314	Bareilly_Aishbagh_Express
 15315	Gonda_Kasganj_Gokul_Express

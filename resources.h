@@ -1,19 +1,26 @@
 #include <string.h>
+#include <algorithm>
 #include <time.h>
+#include <iostream>
 #include <stdlib.h>
+
+using namespace std;
+
 struct node
 {
         int id;
         float weight;
 	float secondary_weight;
         struct node* next;
-
+	int train_id;
+	
         node()
         {
                 id=0;
                 weight=0;
 		secondary_weight=0;
                 next=NULL;
+		train_id = 0;
         }
         node(const int& x)
         {
@@ -21,6 +28,7 @@ struct node
                 weight=0;
 		secondary_weight=0;
                 next=NULL;
+		train_id =0;
         }
 };
 
@@ -41,7 +49,8 @@ struct station
         tm *arrival;
         tm *departure;
         tm *next_arrival;
-	
+
+	double **cost;		
 	int sizemore;
         int id;
         int *trains;
@@ -94,6 +103,11 @@ struct station
 
 	void assign_cost(float money)
 	{
+		if (money < 0)
+		{
+			std::cout << "You have entered negative Money\n";
+			std::cin >> money;
+		}
 		cost[total_trains-1] = money;
 	}
         void print()
@@ -103,5 +117,9 @@ struct station
                         printf("%d\t%d\t\t%02d:%02d\t\t%02d:%02d\t\t%d\t\t%02d:%02d\t%f\n",id,trains[j],arrival[j].tm_hour,arrival[j].tm_min,departure[j].tm_hour,departure[j].tm_min,next[j],next_arrival[j].tm_hour,next_arrival[j].tm_min,cost[j]);
 		
         }
+
+	void assign_cost()
+	{
+		
 };
 

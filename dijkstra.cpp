@@ -59,7 +59,7 @@ void create_edge(struct node *list,const int& node1,const int & node2,const floa
 
 }
 
-void create_edge(struct node *list,const int& node1,const int & node2,const float & weight, const float & secondary_weight)
+void create_edge(struct node *list,const int& node1,const int & node2,const float & weight, const int & train_id)
 {
         struct node *current= &list[node1];
         struct node *temp=current;
@@ -77,14 +77,15 @@ void create_edge(struct node *list,const int& node1,const int & node2,const floa
         current=(struct node *)malloc(sizeof(struct node));
         current->next=temp->next;
         temp->next=current;
-
         current->id = node2;
+printf("%d train %d\n",train_id,node2);
+if (node2 == 302) scanf("%d",&node2);
         current->weight=weight;
-
+	current->train_id = train_id;
 }
 
 
-void dijkstra(struct node *list,int n, int source, int target, int *prev, float *dist)
+void dijkstra(struct node *list,int n, int source, int target, int *prev, int *trains)
 {
 	int i;
 	float new_dist;
@@ -115,14 +116,15 @@ void dijkstra(struct node *list,int n, int source, int target, int *prev, float 
 			{
 				dist[neighbour->id] = new_dist;
 				prev[neighbour->id] = current.id;
+				trains[neighbour->id] = neighbour->train_id;
 				Q.update(handle[neighbour->id]);
 			}
 				neighbour = neighbour->next;
 		}
 	}
-        for (i=0;i<n;i++)
-                printf("%d\t%f\n",list[i].id,dist[list[i].id]);
-        int j;
+//        for (i=0;i<n;i++)
+  //              printf("%d\t%f\n",list[i].id,dist[list[i].id]);
+/*        int j;
 
         for (j=0,i=target;i!=source;i=prev[i],j++)
                 if(j>=n)
@@ -133,7 +135,7 @@ void dijkstra(struct node *list,int n, int source, int target, int *prev, float 
                 else
                         printf("%d<--",i);
         printf("%d\n",source);
-
+*/
 }
 /*
 int main()
@@ -183,7 +185,7 @@ int main()
 	dist = (float *)malloc(sizeof(float)*n);
 	prev = (int *)malloc(sizeof(int)*n);	
 
-	dijkstra(list,n,node1,node2,prev,dist);
+	dijkstra(list,n,node1,node2,prev,);
 
 	for (i=0;i<n;i++)
 		printf("%d\t%f\n",list[i].id,dist[list[i].id]);
