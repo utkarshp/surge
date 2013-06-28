@@ -3,8 +3,10 @@
 #include <time.h>
 #include <iostream>
 #include <stdlib.h>
+#include <functional>
 
-using namespace std;
+extern double time_diff(tm,tm,tm,bool);
+
 
 struct node
 {
@@ -44,19 +46,23 @@ struct node_less
 
 };
 
+
 struct station
 {
         tm *arrival;
         tm *departure;
         tm *next_arrival;
 
-	double **cost;		
+	double **timecost;		
 	int sizemore;
         int id;
         int *trains;
         int *next;
 	float *cost;
         int total_trains;
+	int *sortedindex;					//Sorted index is an array of indices sorted according to train number.
+								//That is, if a train number, say 11345 is to come at 5th place if sorted
+								//then sortedindex[5] will be equal to index of 11345 in original array trains.
 
         station(int total=0, int num = 0)
         {
@@ -118,8 +124,37 @@ struct station
 		
         }
 
-	void assign_cost()
+	bool compare_function(const int& i, const int& j) { return trains[i] < trains[j] ;}  //Function to sort train number indices.
+
+	void assign_time_cost()
 	{
-		
+		sortedindex = (int *)malloc(sizeof(int)*total_trains);
+		int i;
+		for (i=0;i<total_trains;i++) sortedindex[i] = i;
+
+		std::sort(&sortedindex[0], &sortedindex[total_trains], std::bind(&station::compare_function,this,std::placeholders::_1,std::placeholders::_2));
+		/*for (i=0;i<total_trains;i++)
+			std::cout << trains[sortedindex[i]] << "\n";
+		std::cout << "enter\n";
+		std::cin >> i;*/
+		timecost = (double **)malloc(sizeof(double *)*total_trains);
+		for (i=0;i<total_trains;i++) timecost[i] = (double *)malloc(sizeof(double) * total_trains);
+
+		int j,index1,index2;
+		for (i=0;i<total_trains;i++)
+		{
+			index1 = sortedindex[i];
+			std::cout << i << ":- ";
+			for(j=0;j<total_trains;j++)
+			{
+				index2 = sortedindex[j];
+				timecost[i][j] = time_diff (arrival[index1], departure[index2], next_arrival[index2], index1 != index2);
+				std::cout << timecost[i][j] << '\t';
+			}//timecost[i][j] stores time cost or edge weight to arrive at station by train of index1 and departing from train of index2
+			std::cout << '\n';
+		}
+		std::cout << '\n';
+
+	}		
 };
 

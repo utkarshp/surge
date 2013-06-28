@@ -76,14 +76,18 @@ int **makematrix(node graph[], int n)		// function to make an adjacency matrix l
 	return reach;
 }
 
-double time_diff(tm current, tm begin, tm end)
-{
-	double difference1 = difftime(mktime(&begin),mktime(&current));
+double time_diff(tm current, tm begin, tm end, bool trainchanged) //current is time at which one reaches a station. begin is at which one departs.
+{								  //end is time at which one reaches the next station.
+
+	double difference1 = difftime(mktime(&begin),mktime(&current));		//difftime is used as difftime(end, beginning);
 	if(difference1 < TIMEPASS)
 	{
-		begin.tm_mday++;
-		end.tm_mday++;
-		difference1 = difftime(mktime(&begin),mktime(&current));
+		if (!(difference1 >= 0 && !trainchanged))
+		{
+			begin.tm_mday++;
+			end.tm_mday++;
+			difference1 = difftime(mktime(&begin),mktime(&current));
+		}
 	}
 	double difference2 = difftime(mktime(&end),mktime(&begin));
 	if(difference2 < 0)
@@ -122,6 +126,8 @@ main()
 	int *visited= (int *)malloc(sizeof(int)*total_stations);
 
 	print_graph(all_nodes,total_stations);
+
+	for (i=0;i<total_stations;i++) all_stations[i].assign_time_cost();
 
 	//	for (i=0;i<total_stations;i++)
 	//		printf("%d --- %d %d\n",i,visited[i],reachable[i]);

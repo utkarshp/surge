@@ -9,7 +9,7 @@
 #define NAMELENGTH 20
 #define NUMBERLENGTH 8
 #define TEMP all_stations[current]
-#define PATH "./uprail/trains/"
+#define PATH "./MyTest/"
 
 extern int total_stations;
 

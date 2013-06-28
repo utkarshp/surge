@@ -3,7 +3,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<boost/heap/fibonacci_heap.hpp>
-#define INFINITY 1000000
+//#define INFINITY 1000000
 
 using namespace boost::heap;
 
@@ -78,8 +78,8 @@ void create_edge(struct node *list,const int& node1,const int & node2,const floa
         current->next=temp->next;
         temp->next=current;
         current->id = node2;
-printf("%d train %d\n",train_id,node2);
-if (node2 == 302) scanf("%d",&node2);
+//printf("%d train %d\n",train_id,node2);
+//if (node2 == 302) scanf("%d",&node2);
         current->weight=weight;
 	current->train_id = train_id;
 }
