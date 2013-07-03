@@ -3,13 +3,12 @@
 #include <cstring>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <iostream>
 #include "resources.h"
 #define NAMELENGTH 20
 #define NUMBERLENGTH 8
 #define TEMP all_stations[current]
-#define PATH "./MyTest/"
+#define PATH "./uprail/trains/"
 
 extern int total_stations;
 
@@ -39,12 +38,12 @@ station *main_railway()
 	char train_name[total_trains][NAMELENGTH];
 
 	int current,next,previous;
-	tm arrive, depart, next_arrive;
+	mytm arrive, depart, next_arrive;
 
 
-	memset(&arrive,0,sizeof(tm));
-	memset(&depart,0,sizeof(tm));
-	memset(&next_arrive,0,sizeof(tm));
+	memset(&arrive,0,sizeof(mytm));
+	memset(&depart,0,sizeof(mytm));
+	memset(&next_arrive,0,sizeof(mytm));
 
 
 	printf("Enter the total no. of stations ");
@@ -60,6 +59,7 @@ station *main_railway()
 	i=0;
 	int space;
 	float cost;
+	int hour1,hour2,min1,min2;
 	while(!feof(fp))
 	{
 		space = 0;
@@ -96,10 +96,13 @@ station *main_railway()
 		fclose(railway);
 		railway = fopen((string(PATH) + string(train_num[i])).c_str(),"r");
 		//	printf("Stations for train %d = %d\n",i,stations);
-		fscanf(railway,"%d %d:%d",&current,&arrive.tm_hour,&arrive.tm_min);
+		fscanf(railway,"%d %d:%d",&current,&hour1,&min1);
+		arrive.update(hour1,min1,0);
 		for (j=0;j<stations;j++)
 		{
-			fscanf(railway,"%d:%d %f\n%d %d:%d",&depart.tm_hour,&depart.tm_min,&cost,&next,&next_arrive.tm_hour,&next_arrive.tm_min);
+			fscanf(railway,"%d:%d %f\n%d %d:%d",&hour1,&min1,&cost,&next,&hour2,&min2);
+			depart.update(hour1,min1,0);
+			next_arrive.update(hour2,min2,0);
 			all_stations[current].add_train(atoi(train_num[i]),next);
 			if (j>0) all_stations[previous].assign_cost(cost);
 			TEMP.assign_time(arrive,depart,next_arrive);
@@ -107,7 +110,8 @@ station *main_railway()
 			current = next;
 			arrive = next_arrive;
 		}
-		fscanf(railway,"%d:%d %f",&depart.tm_hour,&depart.tm_min,&cost);
+		fscanf(railway,"%d:%d %f",&hour1,&min1,&cost);
+		depart.update(hour1,min1,0);
 		all_stations[current].add_train(atoi(train_num[i]),next);
 		TEMP.assign_time(arrive,depart,next_arrive);
 		if (j>0) all_stations[previous].assign_cost(cost);
@@ -116,14 +120,14 @@ station *main_railway()
 		i++;
 	}	
 	fclose(fp);
-
+/*
 	printf("Station\tTrain No.\tArrival\t\tDeparture, Next Station \tArrival\tCost\n");
 	for (i=0;i<total_stations;i++)
 	{
 		printf("---------------------------------------------%d---------------------------------------------\n",i);
 		all_stations[i].print();
 	}
-
+*/
 	return all_stations;
 }
 

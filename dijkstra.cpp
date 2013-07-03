@@ -23,7 +23,7 @@ void print_graph(struct node *list,const int & n)
 		temp=list[i].next;
 		while(temp!=NULL)
 		{
-			printf("%d----%f----%d\n",i,temp->weight,temp->id);
+			printf("%d----%f(%d)----%d\n",i,temp->weight,temp->train_id,temp->id);
 			temp=temp->next;
 		}
 	}
@@ -65,13 +65,7 @@ void create_edge(struct node *list,const int& node1,const int & node2,const floa
         struct node *temp=current;
 
         while(temp->next!=NULL)
-                if(temp->id == node2)
-                {
-                        if(temp->weight > weight)
-                                temp->weight = weight;
-                        return;
-                }
-                else if(temp->next->weight <= weight)
+                if(temp->next->weight <= weight)
                         temp=temp->next;
                 else break;
         current=(struct node *)malloc(sizeof(struct node));
