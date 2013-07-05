@@ -52,14 +52,25 @@ void station::assign_time_weight(node *origin, mytm starting)
 
 		if (lower == &sortedindex[total_trains]) bounds.second = lower;
 
-		for (lower = bounds.first; lower < bounds.second; lower++)
-			if (difftime(departure[*lower], starting) >= 0) break;
+//		for (lower = bounds.first; lower < bounds.second; lower++)
+//			if (difftime(departure[*lower], starting) >= 0) break;
 
-		if (lower == bounds.second) 
-			lower = bounds.first;
 	
-		newindex = *std::min_element(lower, bounds.second, std::bind(&station::comp_arr,this,std::placeholders::_1,std::placeholders::_2));
-	//min_element returns iterator to minimum element in the range
+	//	newindex = *std::min_element(bounds.first, bounds.second, std::bind(&station::comp_arr,this,std::placeholders::_1,std::placeholders::_2));
+
+		double diff = time_diff(starting, departure[*bounds.first], next_arrival[*bounds.first],0);
+		double currdiff = diff;
+		newindex = *bounds.first;
+		for(lower = bounds.first; lower < bounds.second; lower++)
+		{
+			currdiff = time_diff(starting, departure[*lower], next_arrival[*lower],0);
+			if (currdiff<= diff)
+			{
+				diff = currdiff;
+				newindex = *lower;
+			}
+		}
+			
 
 		temp->train_id = trains[newindex];
 		temp->weight = cost[newindex];
@@ -107,6 +118,7 @@ void time_dijkstra(station* all_stations,node *list, int n, int source, int dest
                 neighbour = current.next ;
                 while (neighbour!=NULL)
                 {
+			if(neighbour->id == current.id) continue;
                         new_dist = dist[current.id] + neighbour->weight;
 			new_time = time_array[current.id] + neighbour->time_weight;
                         if (new_time < time_array[neighbour->id])

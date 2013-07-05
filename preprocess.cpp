@@ -209,6 +209,7 @@ main()
 			memset(arrive,0,size);
 			memset(depart,0,size);
 
+			int printflag=1;
 			time_dijkstra(all_stations, all_reachable, total_stations, source, dest, departure, prev, trains);
 			for (j=0,i=dest;i!=source;i=prev[i],j++)
 				if(i == prev[i])
@@ -218,8 +219,17 @@ main()
 				}
 				else
 				{
-					printf("%d<--",i);
-					printf("%02d:%02d--",arrive[i].gethour(),arrive[i].getmin());
+					if(printflag)
+					{
+						printf("%d<--",i);
+						printf("%02d:%02d--",arrive[i].gethour(),arrive[i].getmin());
+					}
+					if (trains[i] == trains[prev[i]])
+					{
+						printflag=0;
+						continue;
+					}
+					printflag=1;
 					printf("--%d----%02d:%02d--<",trains[i],depart[i].gethour(), depart[i].getmin());
 				}
 			printf("%d\n",source);

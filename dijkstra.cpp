@@ -43,13 +43,13 @@ void create_edge(struct node *list,const int& node1,const int & node2,const floa
 		}
 		else
 			temp=temp->next;
-		if(temp->id == node2)
-		{
-			if(temp->weight > weight)
-				temp->weight = weight;
-			return;
-		}
-	
+	if(temp->id == node2)
+	{
+		if(temp->weight > weight)
+			temp->weight = weight;
+		return;
+	}
+
 	current=(struct node *)malloc(sizeof(struct node));
 	current->next=temp->next;
 	temp->next=current;
@@ -65,9 +65,24 @@ void create_edge(struct node *list,const int& node1,const int & node2,const floa
         struct node *temp=current;
 
         while(temp->next!=NULL)
-                if(temp->next->weight <= weight)
+		if(temp->id == node2)
+		{
+			if(temp->weight > weight)
+			{
+				temp->weight = weight;
+				current->train_id = train_id;
+			}
+			return;
+		}
+                else if(temp->next->weight <= weight)
                         temp=temp->next;
                 else break;
+	if(temp->id == node2)
+	{
+		if(temp->weight > weight)
+			temp->weight = weight;
+		return;
+	}
         current=(struct node *)malloc(sizeof(struct node));
         current->next=temp->next;
         temp->next=current;
