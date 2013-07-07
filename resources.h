@@ -8,6 +8,8 @@ extern float  *dist;
 extern int total_stations;
 extern double *time_array;
 
+
+
 class mytm
 {
         int tm_hour;
@@ -35,13 +37,11 @@ public:
         {
                 char prev;
                 prev = std::cout.fill('0');
-                std::cout << "\n";
                 std::cout.width(2);
                 std::cout << tm_hour;
-                std::cout << " : ";
+                std::cout << ":";
                 std::cout.width(2);
                 std::cout << tm_min;
-                std::cout << " On " << tm_day << "th day\n";
                 std::cout.fill(prev);
 
         }
@@ -56,6 +56,26 @@ public:
         int gethour() {return tm_hour;}
         int getmin() {return tm_min;}
         int getday() {return tm_day;}
+};
+
+struct pathstop
+{
+	int id;
+	int train;
+	int mustprint;
+	mytm arrival;
+	mytm departure;
+
+	void print()
+	{
+		arrival.print(); 
+		std::cout << "-->";
+		std::cout << id;
+		if (train == -1) return;
+		std::cout << ">--";
+		departure.print();
+		std::cout << "----" << train << "----";
+	}
 };
 
 struct node
@@ -119,7 +139,8 @@ struct station
         mytm *departure;
         mytm *next_arrival;
 
-	double **timecost;		
+	bool *unusable;					//unusable is an array indicating whether a particular train is usable or not.
+	double **timecost;				//Reason could be that it has been removed as an edge during Yen's algorithm.
 	int sizemore;
         int id;
         int *trains;
@@ -127,7 +148,7 @@ struct station
 	float *cost;
         int total_trains;
 	int *sortedindex;					//Sorted index is an array of indices sorted according to train number.
-								//That is, if a train number, say 11345 is to come at 5th place if sorted
+	int *trainsorted;					//That is, if a train number, say 11345 is to come at 5th place if sorted
 								//then sortedindex[5] will be equal to index of 11345 in original array trains.
 
         station(int total=0, int num = 0)
@@ -135,17 +156,19 @@ struct station
                 id=num;
 		sizemore=0;
                 total_trains=0;
-                trains = (int *)malloc(sizeof(int)*total);
                  next  = (int *)malloc(sizeof(int)*total);
+                trains = (int *)malloc(sizeof(int)*total);
                  cost  = (float *)malloc(sizeof(float)*total);
                 arrival= (mytm *)malloc(sizeof(mytm)*total);
                 departure = (mytm *)malloc(sizeof(mytm)*total);
+                unusable  = (bool *)malloc(sizeof(bool)*total);
                 next_arrival = (mytm *)malloc(sizeof(mytm)*total);
 		int size = sizeof(mytm)*total;
                 
 		memset(arrival,0,size);
-		memset(departure,0,size);
 		memset(next_arrival,0,size);
+		memset(departure,0,size);
+		memset( unusable,0,sizeof(bool)*total);
         }
 
         void assign_time(mytm arrival_time, mytm departure_time, mytm next_arrival_time)
@@ -162,14 +185,23 @@ struct station
 			cost  = (float *)realloc(cost,sizeof(float)*total_trains);
 			arrival= (mytm *)realloc(arrival,sizeof(mytm)*total_trains);
 			departure = (mytm *)realloc(departure,sizeof(mytm)*total_trains);
+			unusable  = (bool *)realloc( unusable,sizeof(bool)*total_trains);
 			next_arrival = (mytm *)realloc(next_arrival,sizeof(mytm)*total_trains);
 			memset(&arrival[total_trains-1],0,sizeof(mytm));
 			memset(&departure[total_trains-1],0,sizeof(mytm));
 			memset(&next_arrival[total_trains-1],0,sizeof(mytm));
+			memset(&unusable[total_trains],0,sizeof(bool));
 			sizemore=1;
 		}
         }
 
+	void restore()		//Restore usability of all trains
+	{
+		memset( unusable,0,sizeof(bool)*total_trains);
+	}
+
+	void remove_edge(int train);
+	
         void add_train(int train_no,int upcoming)
         {
                 trains[total_trains] = train_no;
@@ -187,8 +219,8 @@ struct station
 	}
         void print()
         {
-                int i,j;
-                for (i=0,j=sortedindex[i];i<total_trains;i++,j=sortedindex[i])
+                int j;
+                for (j=0;j<total_trains;j++)
                         printf("%d\t%d\t\t%02d:%02d\t\t%02d:%02d\t\t%d\t\t%02d:%02d\t%f\n",id,trains[j],arrival[j].gethour(),arrival[j].getmin(),departure[j].gethour(),departure[j].getmin(),next[j],next_arrival[j].gethour(),next_arrival[j].getmin(),cost[j]);
 		
         }
@@ -206,14 +238,16 @@ struct station
 	void assign_time_cost()
 	{
 		sortedindex = (int *)malloc(sizeof(int)*total_trains);
+		trainsorted = (int *)malloc(sizeof(int)*total_trains);
 		int i;
-		for (i=0;i<total_trains;i++) sortedindex[i] = i;
+		for (i=0;i<total_trains;i++) sortedindex[i] = trainsorted[i] = i;
 
 		std::sort(&sortedindex[0], &sortedindex[total_trains], std::bind(&station::compare_train,this,std::placeholders::_1,std::placeholders::_2));
 		std::stable_sort(&sortedindex[0], &sortedindex[total_trains], std::bind(&station::compare_cost,this,std::placeholders::_1,std::placeholders::_2));
 		std::stable_sort(&sortedindex[0], &sortedindex[total_trains], std::bind(&station::comp_arr,this,std::placeholders::_1,std::placeholders::_2));
 		std::stable_sort(&sortedindex[0], &sortedindex[total_trains], std::bind(&station::compare_departure,this,std::placeholders::_1,std::placeholders::_2));
 		std::stable_sort(&sortedindex[0], &sortedindex[total_trains], std::bind(&station::compare_neighbours,this,std::placeholders::_1,std::placeholders::_2));
+		std::sort(&trainsorted[0], &trainsorted[total_trains], std::bind(&station::compare_train,this,std::placeholders::_1,std::placeholders::_2));
 /*		timecost = (double **)malloc(sizeof(double *)*total_trains);
 		for (i=0;i<total_trains;i++) timecost[i] = (double *)malloc(sizeof(double) * total_trains);
 

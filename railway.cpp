@@ -120,14 +120,14 @@ station *main_railway()
 		i++;
 	}	
 	fclose(fp);
-/*
+
 	printf("Station\tTrain No.\tArrival\t\tDeparture, Next Station \tArrival\tCost\n");
 	for (i=0;i<total_stations;i++)
 	{
 		printf("---------------------------------------------%d---------------------------------------------\n",i);
 		all_stations[i].print();
 	}
-*/
+
 	return all_stations;
 }
 

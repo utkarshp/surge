@@ -8,33 +8,25 @@
 
 float *dist;
 int total_stations;
-int **reach;
+int *reachable;
 int **adjmatrix;			//Adjacency matrix representation of the graph
 extern void print_graph(struct node *, const int &);
 extern station *main_railway();
 extern void create_edge(node *, const int &, const int &, const float &);
 extern void create_edge(node *, const int &, const int &, const float &, const int &);
-extern void time_dijkstra(station* all_stations,node *list, int n, int source, int dest, mytm starting, int *previous, int *trains);
-extern void dijkstra(struct node *list,int n, int source, int target, int *previous, int *dist);
+extern void time_dijkstra(station* all_stations,node *list, int n, int source, int dest, mytm starting, int *prev, int *trains);
+extern void dijkstra(struct node *list,int n, int source, int target, int *prev, int *dist);
 mytm *arrive;
 mytm *depart;
-int *previous;
-int *trains;
 extern double *time_array;
 extern double difftime(mytm,mytm);
-
 using namespace std;
+mytm journeyplan(int *, station *, int, node *, int, int, mytm, int * , int *, int );
 
-typedef std::vector<pathstop> Vector;
-typedef std::vector<pathstop>::iterator Iterator;
-
-Vector journeyplan( station *, int, node *, int, int, mytm, int * , int *, int );
-
-
-
-void **makematrix(node graph[], int n)		// function to make an adjacency matrix like data structure for reachability
+int **makematrix(node graph[], int n)		// function to make an adjacency matrix like data structure for reachability
 {
 
+	int **reach;
 	reach = (int **)malloc(sizeof(int *)*n);
 	adjmatrix = (int **)malloc(sizeof(int *)*n);
 	int i;
@@ -69,6 +61,7 @@ void **makematrix(node graph[], int n)		// function to make an adjacency matrix 
 
 	for (i=0;i<n;i++)
 		reach[i][i] = 1;	
+	return reach;
 }
 
 
@@ -104,13 +97,13 @@ main()
 
 	station *all_stations = main_railway();
 
-	Vector path;
-	Iterator it;
+
+
 
 	struct node *all_nodes;
 	all_nodes = (node *)malloc(sizeof(node)*total_stations);
 
-	int i,j;
+	int i,j, **reach;
 	float weight;
 	for (i=0;i<total_stations;i++)
 		all_nodes[i] = node(i);
@@ -119,11 +112,13 @@ main()
 		for (j=0;j<all_stations[i].total_trains;j++)
 			create_edge(all_nodes,i,all_stations[i].next[j],0);
 
+	reachable = (int *)malloc(sizeof(int)*total_stations);
 	int *visited= (int *)malloc(sizeof(int)*total_stations);
+
+	print_graph(all_nodes,total_stations);
 
 	for (i=0;i<total_stations;i++) all_stations[i].assign_time_cost();
 
-	makematrix(all_nodes,total_stations);
 	while (1)
 	{
 		printf("Please Enter source station ");
@@ -131,20 +126,24 @@ main()
 		printf("Please Enter Destination station id ");
 		scanf("%d",&dest);
 
+		reach = makematrix(all_nodes,total_stations);
+		for (i=0;i<total_stations;i++)
+			if (reach[source][i] == 1 && reach[i][dest] == 1) reachable[i] = 1;
+			else reachable[i]=0;
 
 		int choice;
 		printf("For minimising cost, enter 1.\nFor minmizing time enter 2. ");
 		scanf("%d",&choice);
 		if(choice == 1)
 		{
-			previous = (int *)malloc(sizeof(int)*total_stations);
-			trains = (int *)malloc(sizeof(int)*total_stations);
+			int *prev = (int *)malloc(sizeof(int)*total_stations);
+			int *trains = (int *)malloc(sizeof(int)*total_stations);
 
 			dist = (float *)malloc(sizeof(float)*total_stations);
 
-			journeyplan(all_stations, total_stations, all_nodes, source, dest, departure, previous, trains, choice);
-			for (j=0,i=dest;i!=source;i=previous[i],j++)
-				if(i == previous[i])
+			journeyplan(reachable, all_stations, total_stations, all_nodes, source, dest, departure, prev, trains, choice);
+			for (j=0,i=dest;i!=source;i=prev[i],j++)
+				if(i == prev[i])
 				{
 					printf("Not connected\n");
 					break;
@@ -155,7 +154,7 @@ main()
 			
 			free(dist);
 			free(trains);
-			free(previous);
+			free(prev);
 				continue;
 		}
 		else if (choice == 2);
@@ -170,8 +169,8 @@ main()
 			departure.update(hour,min,0);
 			
 			dist = (float *)malloc(sizeof(float)*total_stations);
-			previous = (int *)malloc(sizeof(int)*total_stations);
-			trains = (int *)malloc(sizeof(int)*total_stations);
+			int *prev = (int *)malloc(sizeof(int)*total_stations);
+			int *trains = (int *)malloc(sizeof(int)*total_stations);
 			depart = (mytm *)malloc(sizeof(mytm)*total_stations);
 			arrive = (mytm *)malloc(sizeof(mytm)*total_stations);
 			time_array = (double *)malloc(sizeof(double)*total_stations);
@@ -181,16 +180,32 @@ main()
 			memset(depart,0,size);
 
 			int printflag=1;
-			path = journeyplan(all_stations, total_stations, all_nodes, source, dest, departure, previous, trains, choice);
-			if (path.empty()) continue;
-			path.begin()->print();
-			for (it = path.begin() + 1; it != path.end(); it++)
-				if (it->train != (it-1)->train || it->mustprint)
-					it->print();
-			std::cout << '\n';
+			journeyplan(reachable, all_stations, total_stations, all_nodes, source, dest, departure, prev, trains, choice);
+			for (j=0,i=dest;i!=source;i=prev[i],j++)
+				if(i == prev[i])
+				{
+					printf("Not connected\n");
+					break;
+				}
+				else
+				{
+					if(printflag)
+					{
+						printf("%d<--",i);
+						printf("%02d:%02d--",arrive[i].gethour(),arrive[i].getmin());
+					}
+					if (trains[i] == trains[prev[i]])
+					{
+						printflag=0;
+						continue;
+					}
+					printflag=1;
+					printf("--%d----%02d:%02d--<",trains[i],depart[i].gethour(), depart[i].getmin());
+				}
+			printf("%d\n",source);
 
 			free(dist);
-			free(previous);	
+			free(prev);	
 			free(trains);
 			free(arrive);
 			free(depart);
