@@ -14,8 +14,8 @@ extern void print_graph(struct node *, const int &);
 extern station *main_railway();
 extern void create_edge(node *, const int &, const int &, const float &);
 extern void create_edge(node *, const int &, const int &, const float &, const int &);
-extern void time_dijkstra(station* all_stations,node *list, int n, int source, int dest, mytm starting, int *previous, int *trains);
-extern void dijkstra(struct node *list,int n, int source, int target, int *previous, int *dist);
+extern void time_dijkstra(station* all_stations,node *list, int n, int source, int dest, mytm starting);
+extern void dijkstra(struct node *list,int n, int source, int target);
 mytm *arrive;
 mytm *depart;
 int *previous;
@@ -28,8 +28,9 @@ using namespace std;
 typedef std::vector<pathstop> Vector;
 typedef std::vector<pathstop>::iterator Iterator;
 
-Vector journeyplan( station *, int, node *, int, int, mytm, int * , int *, int );
-
+extern Vector journeyplan( station *, int, int, int, mytm, int, float i=0, double j=0 );
+Vector yenksp(station *all_stations, int total_stations, int source, int dest, mytm starting, float cost);
+extern void printpath(Vector);
 
 
 void **makematrix(node graph[], int n)		// function to make an adjacency matrix like data structure for reachability
@@ -131,9 +132,10 @@ main()
 		printf("Please Enter Destination station id ");
 		scanf("%d",&dest);
 
+		for (i=0;i<total_stations;i++) all_stations[i].restore();
 
 		int choice;
-		printf("For minimising cost, enter 1.\nFor minmizing time enter 2. ");
+		printf("For minimising cost, enter 1.\nFor minmizing time enter 2.");
 		scanf("%d",&choice);
 		if(choice == 1)
 		{
@@ -142,7 +144,7 @@ main()
 
 			dist = (float *)malloc(sizeof(float)*total_stations);
 
-			journeyplan(all_stations, total_stations, all_nodes, source, dest, departure, previous, trains, choice);
+			journeyplan(all_stations, total_stations, source, dest, departure, choice);
 			for (j=0,i=dest;i!=source;i=previous[i],j++)
 				if(i == previous[i])
 				{
@@ -158,7 +160,8 @@ main()
 			free(previous);
 				continue;
 		}
-		else if (choice == 2);
+		
+		else if (choice == 2)
 		{
         	        memset(&departure, 0, sizeof(mytm));
 			int hour, min;
@@ -180,20 +183,60 @@ main()
 			memset(arrive,0,size);
 			memset(depart,0,size);
 
-			int printflag=1;
-			path = journeyplan(all_stations, total_stations, all_nodes, source, dest, departure, previous, trains, choice);
-			if (path.empty()) continue;
-			path.begin()->print();
-			for (it = path.begin() + 1; it != path.end(); it++)
-				if (it->train != (it-1)->train || it->mustprint)
-					it->print();
-			std::cout << '\n';
+			path = journeyplan(all_stations, total_stations, source, dest, departure, choice);
+			printpath(path);
 
 			free(dist);
 			free(previous);	
 			free(trains);
 			free(arrive);
 			free(depart);
+			continue;
+		}
+		else if(choice == 3)
+		{
+                        dist = (float *)malloc(sizeof(float)*total_stations);
+                        previous = (int *)malloc(sizeof(int)*total_stations);
+                        trains = (int *)malloc(sizeof(int)*total_stations);
+                        depart = (mytm *)malloc(sizeof(mytm)*total_stations);
+                        arrive = (mytm *)malloc(sizeof(mytm)*total_stations);
+                        time_array = (double *)malloc(sizeof(double)*total_stations);
+                        int size = sizeof(mytm)*total_stations;
+
+                        memset(arrive,0,size);
+                        memset(depart,0,size);
+                        memset(&departure, 0, sizeof(mytm));
+                        int hour, min;
+                        printf("Please Enter Time of departure (hh:mm) ");
+                        scanf("%d:%d",&hour,&min);
+                        printf("You have entered: %d To %d  at ",source,dest);
+                        printf("%d:%d O'clock\n",hour,min);
+
+                        departure.update(hour,min,0);
+
+			int cost;
+			std::cout << "Please enter Maximum cost you can afford ";
+			std::cin >> cost;
+			path = yenksp(all_stations, total_stations, source, dest,departure, cost);
+
+			int printflag = 1;
+                        if (path.empty()) continue;
+                        path.begin()->print();
+                        for (it = path.begin() + 1; it != path.end(); it++)
+                                if (it->train != (it-1)->train || it->mustprint)
+                                        it->print();
+                        std::cout << '\n';
+			std::cout << "Total time required = " << (path.back()).timecost << " hours\n";
+			std::cout << "Total Cost = " << (path.back()).cost << " Rs\n";
+
+                        free(dist);
+                        free(previous);
+                        free(trains);
+                        free(arrive);
+                        free(depart);
+			continue;
+
+
 		}
 	}
 

@@ -13,7 +13,7 @@ extern int *previous;
 extern int *trains;
 extern mytm* depart;
 extern void create_edge(node *, const int &, const int &, const float &, const int &);
-extern void dijkstra(struct node *list,int n, int source, int target, int *previous, int *dist);
+extern void dijkstra(struct node *list,int n, int source, int target);
 extern int **reach;
 using namespace boost::heap;
 
@@ -84,7 +84,7 @@ void station::assign_time_weight(node *origin, mytm starting)
 }
 
 
-mytm time_dijkstra(station* all_stations,node *list, int n, int source, int dest, mytm starting, int *previous, int *trains)
+mytm time_dijkstra(station* all_stations,node *list, int n, int source, int dest, mytm starting, float initdist=0, double inittime=0)
 {
         int i;
         float new_dist;
@@ -97,8 +97,8 @@ mytm time_dijkstra(station* all_stations,node *list, int n, int source, int dest
         for (i=0;i<n;i++)
                 time_array[i]=INFINITY;
 
-        dist[source]=0;
-	time_array[source]=0;
+        dist[source]=initdist;
+	time_array[source]=inittime;
 
 	all_stations[source].assign_time_weight(&list[source], starting);
 	arrive [source] = starting;
@@ -137,20 +137,6 @@ mytm time_dijkstra(station* all_stations,node *list, int n, int source, int dest
 
 }
 
-void station::remove_edge(int train)
-{
-	if (sizeof(trains)/sizeof(int) == total_trains)
-		 trains  = (int *)realloc(trains,sizeof(int)*(total_trains+1));
-
-	trains[total_trains] = train;
-	
-	std::pair <int*, int*> bounds;
-
-	bounds = std::equal_range(&trainsorted[0], &trainsorted[total_trains], total_trains, std::bind(&station::compare_train,this,std::placeholders::_1,std::placeholders::_2));
-
-	unusable[*bounds.first] = 1;
-
-}
 
 Vector makepath(int source, int dest)
 {
@@ -160,7 +146,9 @@ Vector makepath(int source, int dest)
 	pathstop temp;
 	it = path.begin();
 	temp.id = dest;
+	temp.cost = dist[dest];
 	temp.arrival = arrive[dest];
+	temp.timecost = time_array[dest];
 	temp.train = -1;
 	path.insert(it,temp);
 	for (i=dest; i!=source; i=previous[i])
@@ -169,6 +157,8 @@ Vector makepath(int source, int dest)
 		temp.train = trains[i];
 		temp.arrival = arrive[previous[i]];
 		temp.departure = depart[i];
+		temp.cost = dist[previous[i]];
+		temp.timecost = time_array[temp.id];
 		it = path.begin();
 		path.insert(it, temp);
 	}
@@ -176,7 +166,7 @@ Vector makepath(int source, int dest)
 	return path;
 }
 
-Vector journeyplan(station *all_stations, int total_stations, node *list, int source, int dest, mytm starting, int *previous, int *trains, int choice)
+Vector journeyplan(station *all_stations, int total_stations, int source, int dest, mytm starting, int choice, float initdist=0, double inittime=0)
 {
 	int i,j;
 	
@@ -186,13 +176,19 @@ Vector journeyplan(station *all_stations, int total_stations, node *list, int so
 	int k=0,neighbour;
 	int total_reachable=0;
 	int *reachable = (int *)malloc(sizeof(int)*total_stations);
-	printf ("\n");
+	if(choice/2==0)	printf ("\n");
 	for (i=0;i<total_stations;i++)
 		if (reach[source][i] == 1 && reach[i][dest] == 1) reachable[i] = 1;
 		else reachable[i]=0;
 	for (i=0;i<total_stations;i++)
-		if(reachable[i]) k=printf("%d ",i), total_reachable++;
-	if(k==0)
+		if(reachable[i])
+		{
+			if (choice == 1 || choice ==2)
+				 k=printf("%d ",i);
+			 total_reachable++;
+		}
+	if (choice == 0 || choice == 2) std::cout << "\n";
+	if(total_reachable==0)
 	{
 		printf("No possible route.\n");
 		free(reachable);
@@ -213,36 +209,37 @@ Vector journeyplan(station *all_stations, int total_stations, node *list, int so
 			}
 	int middle;
 
+	if (choice == 3 || choice == 4) middle = -1;
 	do
 	{
-		std::cout << "\n\nEnter a node which you would like to visit from above in the path from " << source << " to " << dest << "\n";
-		std::cout << "Or enter -1 to consider all possibilities\n";
-		std::cin >> middle;
 		if(middle == -1)
-			if (choice == 2)
+			if (choice == 2 || choice == 4)
 			{
-				midtime = time_dijkstra(all_stations, all_reachable, total_stations, source, dest, starting, previous, trains);
+				midtime = time_dijkstra(all_stations, all_reachable, total_stations, source, dest, starting,initdist,inittime);
 				answer = makepath(source, dest);
 				free(reachable);
 				return answer;
 			}
 
-			else if (choice == 1)
+			else if (choice == 1 || choice == 3)
 			{
-				dijkstra(all_reachable,total_stations,source,dest,previous,trains);
+				dijkstra(all_reachable,total_stations,source,dest);
 				answer = makepath(source,dest);
 				free(reachable);
 				return answer;
 			}
+		std::cout << "\n\nEnter a node which you would like to visit from above in the path from " << source << " to " << dest << "\n";
+		std::cout << "Or enter -1 to consider all possibilities\n";
+		std::cin >> middle;
 	}
 	while (!reachable[middle]);
 
-	answer = journeyplan(all_stations, total_stations, all_reachable, source, middle, starting, previous, trains,choice);
+	answer = journeyplan(all_stations, total_stations, source, middle, starting, choice);
 
 	for (i=0;i<total_stations;i++)
 		previous[i] = 0;
 
-	Vector another = journeyplan(all_stations, total_stations, all_reachable, middle, dest, (answer.end()-1)->arrival, previous, trains, choice);
+	Vector another = journeyplan(all_stations, total_stations, middle, dest, (answer.end()-1)->arrival, choice);
 	
 	answer.erase(answer.end());
 	another.begin()->mustprint = 1;

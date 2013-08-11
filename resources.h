@@ -53,6 +53,12 @@ public:
                 if(day) update(tm_hour, tm_min, tm_day + 1);
         }
 
+	bool operator== (mytm temp)
+	{
+		if (tm_hour == temp.tm_hour && tm_min == temp.tm_min && tm_day == temp.tm_day) return 1;
+		else return 0;
+	}
+
         int gethour() {return tm_hour;}
         int getmin() {return tm_min;}
         int getday() {return tm_day;}
@@ -62,6 +68,8 @@ struct pathstop
 {
 	int id;
 	int train;
+	int cost;
+	double timecost;
 	int mustprint;
 	mytm arrival;
 	mytm departure;
@@ -75,6 +83,14 @@ struct pathstop
 		std::cout << ">--";
 		departure.print();
 		std::cout << "----" << train << "----";
+	}
+	
+	bool operator== (pathstop temp)const
+	{
+		if (id == temp.id)
+			if (train == temp.train)
+				return 1;
+		return 0;
 	}
 };
 

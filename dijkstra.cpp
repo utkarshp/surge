@@ -8,7 +8,8 @@
 using namespace boost::heap;
 
 extern float *dist;
-
+extern int *previous;
+extern int *trains;
 
 typedef fibonacci_heap <node, compare<node_less> > FibonacciHeap;
 typedef fibonacci_heap <node, compare<node_less> > :: handle_type HeapHandle;
@@ -94,7 +95,7 @@ void create_edge(struct node *list,const int& node1,const int & node2,const floa
 }
 
 
-void dijkstra(struct node *list,int n, int source, int target, int *prev, int *trains)
+void dijkstra(struct node *list,int n, int source, int target)
 {
 	int i;
 	float new_dist;
@@ -124,7 +125,7 @@ void dijkstra(struct node *list,int n, int source, int target, int *prev, int *t
 			if (new_dist < dist[neighbour->id])
 			{
 				dist[neighbour->id] = new_dist;
-				prev[neighbour->id] = current.id;
+				previous[neighbour->id] = current.id;
 				trains[neighbour->id] = neighbour->train_id;
 				Q.update(handle[neighbour->id]);
 			}
